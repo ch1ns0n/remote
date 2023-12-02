@@ -1,0 +1,74 @@
+---
+title: "Basline Machine Learning For Kaggle"
+output: html_document
+date: "2023-11-12"
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Load Data
+
+```{r}
+library(ggplot2)
+```
+
+## Load Data 
+
+```{r}
+# Load the training dataset
+training <- read.csv("training.csv") 
+```
+
+ 
+## Basic Preprocessing
+
+```{r}
+# Basic Preprocessing: Remove rows with missing values
+training <- na.omit(training)
+
+# Split the data into training and testing sets
+set.seed(123)  # Set seed for reproducibility
+split_ratio <- 0.8  # 80% training, 20% testing
+num_rows <- nrow(training)
+train_indices <- sample(1:num_rows, size = round(split_ratio * num_rows))
+train_data <- training[train_indices, ]
+test_data <- training[-train_indices, ]
+
+```
+
+## Training and Evaluating Model
+
+```{r}
+# Training the linear regression model using all predictors (Y ~ .)
+model <- lm(Y ~ ., data = train_data)
+
+# Make predictions on the test set
+predictions <- predict(model, newdata = test_data)
+
+# Evaluate the model using Mean Squared Error (MSE)
+mse <- mean((predictions - test_data$Y)^2)
+print(paste("Mean Squared Error:", mse))
+```
+
+## Kaggle Subsmission
+
+```{r}
+# Load the Kaggle testing dataset
+kaggle.test  <- read.csv("testing.csv") 
+
+# Make predictions on the Kaggle testing set
+kaggle.test.predictions <- predict(model, newdata = kaggle.test)
+
+# Create a submission data frame with 'index' and 'Y' columns
+submission <- cbind(kaggle.test$index, kaggle.test.predictions)
+colnames(submission) <- c("index", "Y")
+
+# Generate a unique filename based on the current timestamp
+filename = paste("submission",format(Sys.time(), "%Y%m%d%H%M%S"),".csv", sep="")
+
+# Save the submission data frame to a CSV file
+write.csv(submission, filename, row.names = FALSE)
+```
+ 
